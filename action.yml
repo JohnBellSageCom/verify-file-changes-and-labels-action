@@ -14,6 +14,15 @@ inputs:
   file-globs:
     description: 'Globs for the files to check for changes'
     required: true
+  required-label-message:
+    description: 'The first line of the PR review comment requesting changes when there are critical file changes and missing labels'
+    default: 'This pull request contains changes to critical files.'
+  change-request-dismiss-message-label-added:
+    description: 'The message displayed when the change review is dismissed because the appropriate label has been added'
+    default: 'Required label added to PR confirming changes to critical files'
+  change-request-dismiss-message-changes-reverted:
+    description: 'The message displayed when the change review is dismissed because the file changes have been reverted'
+    default: 'Critical file changes reverted'
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -21,3 +30,6 @@ runs:
     - ${{ inputs.github-token }}
     - ${{ inputs.valid-labels }}
     - ${{ inputs.file-globs}}
+    - ${{ inputs.required-label-message}}
+    - ${{ inputs.change-request-dismiss-message-label-added}}
+    - ${{ inputs.change-request-dismiss-message-changes-reverted}}
