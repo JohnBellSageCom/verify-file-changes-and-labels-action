@@ -49,12 +49,14 @@ def get_env_var(env_var_name, echo_value=False) -> str:
 
 
 class PrChecker:
+    "Checks a PR for changes to critical files and lables"
     def __init__(self, args: Arguments, pr: PullRequest):
         self.pr = pr
         self.args = args
 
     @classmethod
     def from_args(cls, args: Arguments):
+        "Instantiates a PrChecker using the arguments provided"
         repo = Github(args.token).get_repo(args.repo_name)
 
         # Create a pull request object
@@ -64,6 +66,7 @@ class PrChecker:
 
     @cached_property
     def _pr_has_required_label(self) -> bool:
+        "Returns True if the pr has any of the required lables and False otherwise"
         # Get the pull request labels
         pr_labels = self.pr.get_labels()
 
@@ -77,6 +80,7 @@ class PrChecker:
 
     @cached_property
     def _pr_has_changed_critical_files(self) -> bool:
+        "Returns True if the pr includes changes to any of the critical files"
         pr_files = self.pr.get_files()
         for changed_file in pr_files:
             for pattern in self.args.file_globs:
@@ -85,18 +89,32 @@ class PrChecker:
         return False
 
     def verify_pr(self):
+        """Verifies that the if the pr has changed critical files that it has 
+        the appropriate label.
+        
+        If not, it will request changes on the PR. If the changes are reverted
+        or the appropriate label is added it will dismiss the change request.
+        """
         self._handle_pr_review()
 
-    def _filter_pr_reviews_to_bot(self, pr_review: PullRequestReview):
+    def _is_bots_change_request(self, pr_review: PullRequestReview):
+        "Returns True if the pr review is a change request from the github actions bot"
         return ((pr_review.user.login == 'github-actions[bot]'
                  or self.args.required_label_message in pr_review.body)
                 and pr_review.state == 'CHANGES_REQUESTED')
 
     def _get_bots_pr_reviews(self) -> PaginatedList[PullRequestReview]:
+        "Returns a list of the change request created by the github actions bot"
         pr_reviews = self.pr.get_reviews()
-        return list(filter(lambda review: self._filter_pr_reviews_to_bot(review), pr_reviews))
+        return list(filter(lambda review: self._is_bots_change_request(review), pr_reviews))
 
     def _handle_pr_review(self):
+        """Verifies that the if the pr has changed critical files that it has 
+        the appropriate label.
+        
+        If not, it will request changes on the PR. If the changes are reverted
+        or the appropriate label is added it will dismiss the change request.
+        """
         bots_prs = self._get_bots_pr_reviews()
 
         if self._pr_has_changed_critical_files and not self._pr_has_required_label:
@@ -117,7 +135,7 @@ class PrChecker:
 
 
 def get_pr_reference(github_ref: str) -> int:
-    # Try to extract the pull request number from the GitHub reference.
+    "Tries to extract the pull request number from the GitHub reference."
     try:
         pr_number = int(
             re.search('refs/pull/([0-9]+)/merge', github_ref).group(1))
@@ -129,6 +147,7 @@ def get_pr_reference(github_ref: str) -> int:
 
 
 def get_args() -> Arguments:
+    "Uses the environmental variable and command line arguments to return the required arguments"
     # Check if the number of input arguments is correct
     if len(sys.argv) != 7:
         raise ValueError('Invalid number of arguments!')
