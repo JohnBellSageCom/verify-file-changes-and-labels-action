@@ -108,6 +108,7 @@ class PrChecker:
                                  'these changes.',
                                  event='REQUEST_CHANGES')
         else:
+            print('No changes to critical files')
             # If there were valid labels, dismiss the request for changes if present
             for pr_review in bots_prs:
                 print('Dismissing changes request')
