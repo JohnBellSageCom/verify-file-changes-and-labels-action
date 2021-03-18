@@ -75,12 +75,13 @@ def handle_pr_review(should_request_changes: bool):
                 'Required label added to PR confirming intention to update production translations')
 
 
-def get_pr_reference(github_ref: str) -> str:
+def get_pr_reference(github_ref: str) -> int:
     # Try to extract the pull request number from the GitHub reference.
     try:
         pr_number = int(
             re.search('refs/pull/([0-9]+)/merge', github_ref).group(1))
         print(f'Pull request number: {pr_number}')
+        return pr_number
     except AttributeError:
         raise ValueError(
             f'The Pull request number could not be extracted from the GITHUB_REF = {github_ref}')
