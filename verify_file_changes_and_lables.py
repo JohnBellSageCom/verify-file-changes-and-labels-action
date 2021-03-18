@@ -104,7 +104,7 @@ class PrChecker:
             print(
                 f'This pull request contains critical changes and does not contain any of the valid labels: {self.args.valid_labels}')
             if not len(bots_prs):
-                pr.create_review(body=f'{self.args.required_label_message} Please add one of the following labels: `{self.args.valid_labels}` to confirm '
+                self.pr.create_review(body=f'{self.args.required_label_message} Please add one of the following labels: `{self.args.valid_labels}` to confirm '
                                  'these changes.',
                                  event='REQUEST_CHANGES')
         else:
