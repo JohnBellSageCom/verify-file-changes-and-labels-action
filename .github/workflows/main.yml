@@ -1,0 +1,17 @@
+on:
+  pull_request:
+   types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  check_pr_labels:
+    runs-on: ubuntu-latest
+    name: Check that the PR has at least one valid label
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check PR label action
+        uses: ./
+        id: check-pr-label
+        with:
+          valid-labels: 'bug, enhancement'
+          file-globs: '*.*'
