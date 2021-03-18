@@ -45,7 +45,7 @@ def filter_pr_reviews_to_bot(pr_review: PullRequestReview):
 
 def get_bots_pr_reviews(pr: PullRequest) -> PaginatedList[PullRequestReview]:
     pr_reviews = pr.get_reviews()
-    return list(map(filter_pr_reviews_to_bot, pr_reviews))
+    return list(filter(filter_pr_reviews_to_bot, pr_reviews))
 
 
 def handle_pr_review(pr: PullRequest, should_request_changes: bool, valid_labels: str):
