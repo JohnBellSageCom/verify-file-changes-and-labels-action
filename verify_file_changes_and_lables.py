@@ -48,7 +48,7 @@ def get_bots_pr_reviews(pr: PullRequest) -> PaginatedList[PullRequestReview]:
     return list(map(filter_pr_reviews_to_bot, pr_reviews))
 
 
-def handle_pr_review(pr: PullRequest, should_request_changes: bool):
+def handle_pr_review(pr: PullRequest, should_request_changes: bool, valid_labels: str):
     # Check if there were at least one valid label
     # Note: In both cases we exit without an error code and let the check to succeed. This is because GitHub
     # workflow will create different checks for different trigger conditions. So, adding a missing label won't
@@ -64,7 +64,7 @@ def handle_pr_review(pr: PullRequest, should_request_changes: bool):
             f'Error! This pull request does not contain any of the valid labels: {valid_labels}')
         if not len(bots_prs):
             pr.create_review(body='There are changes to production translations in this pull request. '
-                             f'Please add the following label: `{valid_labels}` to confirm that '
+                             f'Please add one of the following labels: `{valid_labels}` to confirm that '
                              'you intend to make these changes.',
                              event='REQUEST_CHANGES')
     else:
@@ -146,7 +146,8 @@ def main():
     is_required_label_present = pr_has_required_label(pr, args.valid_labels)
 
     handle_pr_review(pr,
-        should_request_changes=critical_files_changed and not is_required_label_present)
+                     should_request_changes=critical_files_changed and not is_required_label_present,
+                     valid_labels=args.valid_labels)
 
 
 if __name__ == '__main__':
