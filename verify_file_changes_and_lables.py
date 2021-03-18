@@ -37,18 +37,18 @@ def get_env_var(env_var_name, echo_value=False) -> str:
     return value
 
 
-def filter_pr_reviews_to_bot(pr_review: PaginatedList[PullRequestReview]):
+def filter_pr_reviews_to_bot(pr_review: PullRequestReview):
     return ((pr_review.user.login == 'github-actions[bot]'
              or 'There are changes to production translations in this pull request' in pr_review.body)
             and pr_review.state == 'CHANGES_REQUESTED')
 
 
-def get_bots_pr_reviews(pr: PullRequest):
+def get_bots_pr_reviews(pr: PullRequest) -> PaginatedList[PullRequestReview]:
     pr_reviews = pr.get_reviews()
     return list(map(filter_pr_reviews_to_bot, pr_reviews))
 
 
-def handle_pr_review(should_request_changes: bool):
+def handle_pr_review(pr: PullRequest, should_request_changes: bool):
     # Check if there were at least one valid label
     # Note: In both cases we exit without an error code and let the check to succeed. This is because GitHub
     # workflow will create different checks for different trigger conditions. So, adding a missing label won't
@@ -145,7 +145,7 @@ def main():
     critical_files_changed = pr_has_changed_critical_files(pr, args.file_globs)
     is_required_label_present = pr_has_required_label(pr, args.valid_labels)
 
-    handle_pr_review(
+    handle_pr_review(pr,
         should_request_changes=critical_files_changed and not is_required_label_present)
 
 
