@@ -140,7 +140,7 @@ def main():
     repo = Github(args.token).get_repo(args.repo_name)
 
     # Create a pull request object
-    pr = repo.get_pull(pr_number)
+    pr = repo.get_pull(args.pr_number)
     critical_files_changed = pr_has_changed_critical_files(pr, args.file_globs)
     is_required_label_present = pr_has_required_label(pr, args.valid_labels)
 
