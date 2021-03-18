@@ -15,4 +15,4 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           valid-labels: 'bug, enhancement'
-          file-globs: '*.md'
+          file-globs: '*.py, *.yml'
