@@ -7,7 +7,7 @@ branding:
 inputs:
   github-token:
     description: 'The GitHub token'
-    default: '${{ secrets.GITHUB_TOKEN }}'
+    required: true
   valid-labels:
     description: 'List of valid labels'
     required: true
