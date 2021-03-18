@@ -16,7 +16,22 @@ This is intended to ensure that changes to critical files are appropriately flag
 
 **Required** A list of valid labels. It must be a quoted string, with label separated by colons. For example: `'bug, enhancement'`
 
-### 
+### `file-globs`
+
+**Required** The file globs which will trigger a PR change request if the labels are not present
+
+### `required-label-message`
+
+**Optional** The first line of the PR review comment requesting changes when there are critical file changes and missing labels
+
+### `change-request-dismiss-message-label-added`
+
+**Optional** The message displayed when the change review is dismissed because the appropriate label has been added
+
+### `change-request-dismiss-message-changes-reverted`
+
+**Optional** The message displayed when the change review is dismissed because the file changes have been reverted
+
 
 ## Example usage
 

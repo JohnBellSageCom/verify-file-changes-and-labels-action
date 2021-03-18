@@ -1,5 +1,5 @@
 name: 'Check Pull Request Labels'
-author: 'Nathaniel Hill'
+author: 'John Bell'
 description: 'Verify that the PR has at least one valid label'
 branding:
   icon: 'check'
