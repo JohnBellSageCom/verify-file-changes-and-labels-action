@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-
+from __future__ import annotations
 import os
 import sys
 import re
-from github import Github
+from github import Github, PullRequest, PullRequestReview, PaginatedList
 import typing
 from collections import namedtuple
 import fnmatch
 from functools import cached_property
+
+GITHUB_BOT_LOGIN = 'github-actions[bot]'
 
 Arguments = namedtuple(
     'Arguments',
@@ -50,6 +52,7 @@ def get_env_var(env_var_name, echo_value=False) -> str:
 
 class PrChecker:
     "Checks a PR for changes to critical files and lables"
+
     def __init__(self, args: Arguments, pr: PullRequest):
         self.pr = pr
         self.args = args
@@ -91,7 +94,7 @@ class PrChecker:
     def verify_pr(self):
         """Verifies that the if the pr has changed critical files that it has 
         the appropriate label.
-        
+
         If not, it will request changes on the PR. If the changes are reverted
         or the appropriate label is added it will dismiss the change request.
         """
@@ -99,11 +102,11 @@ class PrChecker:
 
     def _is_bots_change_request(self, pr_review: PullRequestReview):
         "Returns True if the pr review is a change request from the github actions bot"
-        return ((pr_review.user.login == 'github-actions[bot]'
+        return ((pr_review.user.login == GITHUB_BOT_LOGIN
                  or self.args.required_label_message in pr_review.body)
                 and pr_review.state == 'CHANGES_REQUESTED')
 
-    def _get_bots_pr_reviews(self) -> PaginatedList[PullRequestReview]:
+    def _get_bots_pr_reviews(self) -> list[PullRequestReview]:
         "Returns a list of the change request created by the github actions bot"
         pr_reviews = self.pr.get_reviews()
         return list(filter(lambda review: self._is_bots_change_request(review), pr_reviews))
@@ -111,7 +114,7 @@ class PrChecker:
     def _handle_pr_review(self):
         """Verifies that the if the pr has changed critical files that it has 
         the appropriate label.
-        
+
         If not, it will request changes on the PR. If the changes are reverted
         or the appropriate label is added it will dismiss the change request.
         """
@@ -123,15 +126,17 @@ class PrChecker:
                 f'This pull request contains critical changes and does not contain any of the valid labels: {self.args.valid_labels}')
             if not len(bots_prs):
                 self.pr.create_review(body=f'{self.args.required_label_message} Please add one of the following labels: `{self.args.valid_labels}` to confirm '
-                                 'these changes.',
-                                 event='REQUEST_CHANGES')
+                                      'these changes.',
+                                      event='REQUEST_CHANGES')
         else:
             print('No changes to critical files')
             # If there were valid labels, dismiss the request for changes if present
             for pr_review in bots_prs:
                 print('Dismissing changes request')
                 pr_review.dismiss(
-                    self.args.label_added_message if self._pr_has_required_label else self.args.changes_reverted_message)
+                    self.args.label_added_message
+                    if self._pr_has_required_label and self._pr_has_changed_critical_files
+                    else self.args.changes_reverted_message)
 
 
 def get_pr_reference(github_ref: str) -> int:
