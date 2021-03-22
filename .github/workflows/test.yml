@@ -5,8 +5,8 @@ on:
    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  build:
-
+  test-python:
+    name: Test python
     runs-on: ubuntu-latest
 
     steps:
