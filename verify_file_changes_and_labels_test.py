@@ -1,6 +1,4 @@
-import pytest
 from unittest.mock import MagicMock
-from github import Github
 from verify_file_changes_and_labels import PrChecker, Arguments, GITHUB_BOT_LOGIN
 
 DEFAULT_GLOB = '**/main.*'
@@ -225,8 +223,10 @@ def test_pr_checker_verify_pr_critical_file_changes_no_label():
     pr_checker.verify_pr()
 
     # Asset
-    pr.create_review.assert_called_once_with(body=f'{args.required_label_message} Please add one of the following labels: `{args.valid_labels}` to confirm '
-                                             'these changes.',
+    pr.create_review.assert_called_once_with(body=f'{args.required_label_message} '
+                                             f'Please add one of the following '
+                                             f'labels: `{args.valid_labels}` '
+                                             'to confirm these changes.',
                                              event='REQUEST_CHANGES')
 
 

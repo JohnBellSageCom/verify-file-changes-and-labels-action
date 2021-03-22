@@ -3,8 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import re
-from github import Github, PullRequest, PullRequestReview, PaginatedList
-import typing
+from github import Github, PullRequest, PullRequestReview
 from collections import namedtuple
 import fnmatch
 from functools import cached_property
@@ -40,7 +39,7 @@ def get_env_var(env_var_name, echo_value=False) -> str:
     """
     value = os.environ.get(env_var_name)
 
-    if value == None:
+    if value is None:
         raise ValueError(
             f'The environmental variable {env_var_name} is empty!')
 
@@ -69,7 +68,8 @@ class PrChecker:
 
     @cached_property
     def _pr_has_required_label(self) -> bool:
-        "Returns True if the pr has any of the required lables and False otherwise"
+        """Returns True if the pr has any of the required lables and False
+        otherwise"""
         # Get the pull request labels
         pr_labels = self.pr.get_labels()
 
@@ -92,7 +92,7 @@ class PrChecker:
         return False
 
     def verify_pr(self):
-        """Verifies that the if the pr has changed critical files that it has 
+        """Verifies that the if the pr has changed critical files that it has
         the appropriate label.
 
         If not, it will request changes on the PR. If the changes are reverted
@@ -101,18 +101,22 @@ class PrChecker:
         self._handle_pr_review()
 
     def _is_bots_change_request(self, pr_review: PullRequestReview):
-        "Returns True if the pr review is a change request from the github actions bot"
+        """Returns True if the pr review is a change request from the github
+        actions bot"""
         return ((pr_review.user.login == GITHUB_BOT_LOGIN
                  or self.args.required_label_message in pr_review.body)
                 and pr_review.state == 'CHANGES_REQUESTED')
 
     def _get_bots_pr_reviews(self) -> list[PullRequestReview]:
-        "Returns a list of the change request created by the github actions bot"
+        """Returns a list of the change request created by the github actions
+        bot"""
         pr_reviews = self.pr.get_reviews()
-        return list(filter(lambda review: self._is_bots_change_request(review), pr_reviews))
+        return list(filter(
+            lambda review: self._is_bots_change_request(review),
+            pr_reviews))
 
     def _handle_pr_review(self):
-        """Verifies that the if the pr has changed critical files that it has 
+        """Verifies that the if the pr has changed critical files that it has
         the appropriate label.
 
         If not, it will request changes on the PR. If the changes are reverted
@@ -120,22 +124,33 @@ class PrChecker:
         """
         bots_prs = self._get_bots_pr_reviews()
 
-        if self._pr_has_changed_critical_files and not self._pr_has_required_label:
-            # If there were not valid labels, then create a pull request review, requesting changes
+        if self._pr_has_changed_critical_files \
+                and not self._pr_has_required_label:
+            # If there were not valid labels, then create a pull request
+            # review, requesting changes
             print(
-                f'This pull request contains critical changes and does not contain any of the valid labels: {self.args.valid_labels}')
+                f'This pull request contains critical changes and does not '
+                f'contain any of the valid labels: {self.args.valid_labels}')
             if not len(bots_prs):
-                self.pr.create_review(body=f'{self.args.required_label_message} Please add one of the following labels: `{self.args.valid_labels}` to confirm '
-                                      'these changes.',
-                                      event='REQUEST_CHANGES')
+                self.pr.create_review(event='REQUEST_CHANGES',
+                                      body=f'{self.args.required_label_message}'
+                                      f' Please add one of the following '
+                                      f'labels: `{self.args.valid_labels}` to '
+                                      'confirm these changes.'
+                                      )
         else:
-            print(f'Passed\n\tChanges to critical files: {self._pr_has_changed_critical_files}\n\tPR has required labels:{self._pr_has_required_label}')
-            # If there were valid labels, dismiss the request for changes if present
+            print(
+                f'Passed\n\tChanges to critical files: '
+                f'{self._pr_has_changed_critical_files}\n\tPR has required '
+                f'labels:{self._pr_has_required_label}')
+            # If there were valid labels, dismiss the request for changes if
+            # present
             for pr_review in bots_prs:
                 print('Dismissing changes request')
                 pr_review.dismiss(
                     self.args.label_added_message
-                    if self._pr_has_required_label and self._pr_has_changed_critical_files
+                    if self._pr_has_required_label
+                    and self._pr_has_changed_critical_files
                     else self.args.changes_reverted_message)
 
 
@@ -148,11 +163,13 @@ def get_pr_reference(github_ref: str) -> int:
         return pr_number
     except AttributeError:
         raise ValueError(
-            f'The Pull request number could not be extracted from the GITHUB_REF = {github_ref}')
+            f'The Pull request number could not be extracted from the '
+            f'GITHUB_REF = {github_ref}')
 
 
 def get_args() -> Arguments:
-    "Uses the environmental variable and command line arguments to return the required arguments"
+    """Uses the environmental variable and command line arguments to return the
+    required arguments"""
     # Check if the number of input arguments is correct
     if len(sys.argv) != 7:
         raise ValueError('Invalid number of arguments!')
@@ -176,8 +193,14 @@ def get_args() -> Arguments:
     github_ref = get_env_var('GITHUB_REF')
     pr_number = get_pr_reference(github_ref)
 
-    return Arguments(token, valid_labels, repo_name, pr_number, file_globs,
-                     required_label_message, label_added_message, changes_reverted_message)
+    return Arguments(token,
+                     valid_labels,
+                     repo_name,
+                     pr_number,
+                     file_globs,
+                     required_label_message,
+                     label_added_message,
+                     changes_reverted_message)
 
 
 def main():
